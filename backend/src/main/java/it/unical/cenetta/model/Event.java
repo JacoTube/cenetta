@@ -1,7 +1,9 @@
 package it.unical.cenetta.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -33,6 +35,9 @@ public class Event {
     @ManyToMany()
     @JoinTable(name = "evento_partecipanti", joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> participants = new HashSet<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks = new ArrayList<>();
     
     protected Event() {}
 
@@ -51,5 +56,11 @@ public class Event {
     public LocalDateTime getDeadline() { return deadline; }
     public User getOrganizer() { return organizer; }
     public Set<User> getParticipants() { return participants; }
+    public List<Task> getTasks() { return tasks; }
+
+    public void addTask(Task task) {
+        tasks.add(task);
+        task.setEvent(this);
+    }
 
 }
