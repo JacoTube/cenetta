@@ -7,8 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import it.unical.cenetta.model.Event;
+import it.unical.cenetta.model.Task;
+import it.unical.cenetta.model.TaskStatus;
 import it.unical.cenetta.model.User;
 import it.unical.cenetta.repository.EventRepository;
+import it.unical.cenetta.repository.TaskRepository;
 import it.unical.cenetta.repository.UserRepository;
 
 @Service
@@ -16,12 +19,14 @@ public class SeedService {
 
     private final UserRepository uRepo;
     private final EventRepository eRepo;
+    private final TaskRepository tRepo;
     private final PasswordEncoder encoder;
 
-    public SeedService(UserRepository uRepo, EventRepository eRepo, PasswordEncoder encoder) {
+    public SeedService(UserRepository uRepo, EventRepository eRepo, TaskRepository tRepo, PasswordEncoder encoder) {
         this.uRepo = uRepo;
         this.eRepo = eRepo;
         this.encoder = encoder;
+        this.tRepo = tRepo;
     }
 
     @Transactional
@@ -37,6 +42,11 @@ public class SeedService {
         carb.getParticipants().add(luigi);
         eRepo.save(carb);
 
+        Task t1 = new Task("portare risiko", "versione originale", TaskStatus.FREE, carb, luigi);
+        carb.addTask(t1);
+        tRepo.save(t1);
+        
+
         for( Event e : eRepo.findByOrganizerId(mario.getId())) {
             System.out.println("Nome evento: " + e.getTitle() + ", Organizzato da: " + e.getOrganizer().getUsername());
             System.out.print("Lista partecipanti: ");
@@ -44,6 +54,14 @@ public class SeedService {
                 System.out.print(u.getUsername());
             }
             System.out.print("\n");
+            System.out.print("Lista Task: ");
+            System.out.println(e.getTasks());
+            for(Task t : e.getTasks()) {
+                System.out.print(t.getTitle());
+            }
+            System.out.print("\n");
         }
+
+
     }
 }
