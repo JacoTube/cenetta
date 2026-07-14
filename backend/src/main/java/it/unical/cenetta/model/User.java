@@ -13,7 +13,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -45,4 +45,14 @@ public class User implements UserDetails {
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return true; }
+
+    @Override
+    public boolean equals(Object o) {
+        if( this == o ) { return true; }
+        if(!(o instanceof User other)) { return false; }
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() { return getClass().hashCode(); }
 }
