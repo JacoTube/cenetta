@@ -38,15 +38,23 @@ public class Event {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks = new ArrayList<>();
+
+    @Column(nullable = false, unique = true, length = 12)
+    private String inviteCode;
+
+    @Column(nullable = false)
+    private String passwordHash;
     
     protected Event() {}
 
-    public Event(String title, String description, LocalDateTime eventDateTime, LocalDateTime deadline, User organizer) {
+    public Event(String title, String description, LocalDateTime eventDateTime, LocalDateTime deadline, User organizer, String inviteCode, String passwordHash) {
         this.title = title;
         this.description = description;
         this.eventDateTime = eventDateTime;
         this.deadline = deadline;
         this.organizer = organizer;
+        this.inviteCode = inviteCode;
+        this.passwordHash = passwordHash;
     }
 
     public Long getId() { return id; }
@@ -57,6 +65,8 @@ public class Event {
     public User getOrganizer() { return organizer; }
     public Set<User> getParticipants() { return participants; }
     public List<Task> getTasks() { return tasks; }
+    public String getInviteCode() { return inviteCode; }
+    public String getPasswordHash() { return passwordHash; }
 
     public void addTask(Task task) {
         tasks.add(task);
