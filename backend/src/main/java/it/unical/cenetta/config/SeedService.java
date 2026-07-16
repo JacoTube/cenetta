@@ -1,32 +1,36 @@
 package it.unical.cenetta.config;
 
 import java.time.LocalDateTime;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import it.unical.cenetta.model.Event;
-import it.unical.cenetta.model.Task;
-import it.unical.cenetta.model.TaskStatus;
-import it.unical.cenetta.model.User;
-import it.unical.cenetta.repository.EventRepository;
-import it.unical.cenetta.repository.TaskRepository;
-import it.unical.cenetta.repository.UserRepository;
+import it.unical.cenetta.dto.CreateEventRequest;
+import it.unical.cenetta.dto.CreateTaskRequest;
+import it.unical.cenetta.dto.EventDetail;
+import it.unical.cenetta.dto.JoinEventRequest;
+import it.unical.cenetta.dto.TaskDto;
+import it.unical.cenetta.model.*;
+import it.unical.cenetta.repository.*;
+import it.unical.cenetta.service.EventService;
+import it.unical.cenetta.service.TaskService;
 
 @Service
 public class SeedService {
-
     private final UserRepository uRepo;
     private final EventRepository eRepo;
     private final TaskRepository tRepo;
     private final PasswordEncoder encoder;
+    private final EventService service;
+    private final TaskService tService;
 
-    public SeedService(UserRepository uRepo, EventRepository eRepo, TaskRepository tRepo, PasswordEncoder encoder) {
+    public SeedService(UserRepository uRepo, EventRepository eRepo, TaskRepository tRepo, PasswordEncoder encoder, EventService service, TaskService tService) {
         this.uRepo = uRepo;
         this.eRepo = eRepo;
         this.encoder = encoder;
         this.tRepo = tRepo;
+        this.service = service;
+        this.tService = tService;
     }
 
     @Transactional
@@ -38,30 +42,40 @@ public class SeedService {
         uRepo.save(mario);
         uRepo.save(luigi);
 
-        Event carb = new Event("Carbonara e Risiko", "Siete tutti froci", LocalDateTime.now().plusDays(8), LocalDateTime.now().plusDays(7), mario);
-        carb.getParticipants().add(luigi);
-        eRepo.save(carb);
+        CreateEventRequest req = new CreateEventRequest(
+            "Carbonara e Risiko",
+            "Siete tutti froci",
+            LocalDateTime.now().plusDays(8),
+            LocalDateTime.now().plusDays(7),
+            mario,
+            "sesso"
+        );
 
-        Task t1 = new Task("portare risiko", "versione originale", TaskStatus.FREE, carb, luigi);
-        carb.addTask(t1);
-        tRepo.save(t1);
+        EventDetail details = service.create(req, mario);
+        service.join(new JoinEventRequest(details.inviteCode(), "sesso"), luigi);
         
+        CreateTaskRequest ctr1 = new CreateTaskRequest("funghi", "li porta quel ricchione di sinutaro");
+        CreateTaskRequest ctr2 = new CreateTaskRequest("marijuana", "ringraziamo nostro signore gesù cristo");
+        Event evento = eRepo.findByInviteCode(details.inviteCode()).orElseThrow(() -> new IllegalArgumentException("l'evento non esiste"));
+        
+        TaskDto ctr1_dto = tService.create(ctr1, evento.getId(), mario);
+        TaskDto ctr2_dto = tService.create(ctr2, evento.getId(), luigi);
 
-        for( Event e : eRepo.findByOrganizerId(mario.getId())) {
-            System.out.println("Nome evento: " + e.getTitle() + ", Organizzato da: " + e.getOrganizer().getUsername());
-            System.out.print("Lista partecipanti: ");
-            for(User u : e.getParticipants()) {
-                System.out.print(u.getUsername());
-            }
-            System.out.print("\n");
-            System.out.print("Lista Task: ");
-            System.out.println(e.getTasks());
-            for(Task t : e.getTasks()) {
-                System.out.print(t.getTitle());
-            }
-            System.out.print("\n");
+        tService.claim(ctr1_dto.id(), luigi);
+        tService.approve(ctr2_dto.id(), mario);
+
+        tService.claim(ctr2_dto.id(), luigi);
+
+        tService.complete(ctr1_dto.id(), luigi);
+
+
+        System.out.println(">>> codice invito: " + details.inviteCode());
+        
+        for(Task t : evento.getTasks()) {
+            System.out.println("Titolo: " + t.getTitle() + 
+                                ", STATUS: " + t.getStatus().toString() + 
+                                ", Assegnato a: " + t.getAssignedUser().getUsername()
+                            );
         }
-
-
     }
 }

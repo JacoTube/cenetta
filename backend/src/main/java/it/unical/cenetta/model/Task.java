@@ -50,6 +50,7 @@ public class Task {
     public void setStatus(TaskStatus statusToSet) { this.status = statusToSet; }
     public User getAssignedUser() { return assignedUser; }
     public void assignUser(User user) { this.assignedUser = user; }
+    public void deAssignUser() {this.assignedUser = null;}
 
 }
 
