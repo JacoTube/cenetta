@@ -73,4 +73,11 @@ public class Event {
         task.setEvent(this);
     }
 
+    public boolean isOrganizer(User user) {
+        return organizer != null && organizer.getId().equals(user.getId());
+    }
+
+    public boolean isMember(User user) {
+        return isOrganizer(user) || participants.stream().anyMatch(p -> p.getId().equals(user.getId()));
+    }
 }
