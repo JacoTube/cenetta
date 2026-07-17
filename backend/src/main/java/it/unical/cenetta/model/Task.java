@@ -29,6 +29,9 @@ public class Task {
     @ManyToOne()
     private User assignedUser;
 
+    @Version
+    private Long version;
+
     protected Task() {}
 
     public Task(String title, String note, TaskStatus status, Event event, User proposedBy) {
@@ -50,8 +53,7 @@ public class Task {
     public void setStatus(TaskStatus statusToSet) { this.status = statusToSet; }
     public User getAssignedUser() { return assignedUser; }
     public void assignUser(User user) { this.assignedUser = user; }
-    public void deAssignUser() {this.assignedUser = null;}
+    public void deAssignUser() { this.assignedUser = null;}
+    public Long getVersion() { return this.version; }
 
 }
-
-

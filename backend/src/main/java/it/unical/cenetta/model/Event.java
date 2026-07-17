@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import it.unical.cenetta.exception.EventClosedException;
 import jakarta.persistence.*;
 
 @Entity
@@ -79,5 +80,11 @@ public class Event {
 
     public boolean isMember(User user) {
         return isOrganizer(user) || participants.stream().anyMatch(p -> p.getId().equals(user.getId()));
+    }
+
+    public void assertOpen() {
+        if (LocalDateTime.now().isAfter(deadline)) {
+            throw new EventClosedException("L'evento è scaduto");
+        }
     }
 }

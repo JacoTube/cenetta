@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import it.unical.cenetta.dto.CreateTaskRequest;
 import it.unical.cenetta.dto.TaskDto;
+import it.unical.cenetta.exception.*;
 import it.unical.cenetta.model.Event;
 import it.unical.cenetta.model.Task;
 import it.unical.cenetta.model.TaskStatus;
@@ -28,9 +29,12 @@ public class TaskService {
 
     public TaskDto create(CreateTaskRequest tRequest, Long eventId, User proposer) {
         
-        Event event = eRepo.findById(eventId).orElseThrow(() -> new IllegalArgumentException("L'evento non esiste"));
+        Event event = eRepo.findById(eventId).orElseThrow(() -> new NotFoundException("L'evento non esiste"));
+
+        event.isOpen();
+
         if(!event.isMember(proposer)) {
-            throw new IllegalArgumentException("L'Utente non appartiene all'evento"); }
+            throw new ForbiddenException("L'Utente non appartiene all'evento"); }
 
         TaskStatus ts = event.isOrganizer(proposer) ? TaskStatus.FREE : TaskStatus.PENDING_APPROVAL;
         Task t = new Task(tRequest.title(), tRequest.note(), ts, event, proposer);
@@ -42,15 +46,16 @@ public class TaskService {
 
     public TaskDto claim(Long taskId, User user) {
 
-        Task task = tRepo.findById(taskId).orElseThrow(() -> new IllegalArgumentException("La task non esiste"));
+        Task task = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La task non esiste"));
         Event event = task.getEvent();
+        event.isOpen();
 
         if(!event.isMember(user)) {
-            throw new IllegalArgumentException("Utente non membro dell'evento");
+            throw new ForbiddenException("Utente non membro dell'evento");
         }
 
         if(!(task.getStatus() == TaskStatus.FREE)) {
-            throw new IllegalArgumentException("Task non più libera"); 
+            throw new ConflictException("Task non più libera"); 
         }
 
         task.assignUser(user);
@@ -62,15 +67,16 @@ public class TaskService {
 
     public TaskDto release(Long taskId, User user) {
 
-        Task task = tRepo.findById(taskId).orElseThrow(() -> new IllegalArgumentException("La task non esiste"));
+        Task task = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La task non esiste"));
         Event event = task.getEvent();
+        event.isOpen();
 
         if(!event.isMember(user)) {
-            throw new IllegalArgumentException("Utente non membro dell'evento");
+            throw new ForbiddenException("Utente non membro dell'evento");
         }
 
         if(task.getStatus() == TaskStatus.FREE) {
-            throw new IllegalArgumentException("Task già libera"); 
+            throw new ConflictException("Task già libera"); 
         }
 
         task.deAssignUser();
@@ -82,13 +88,14 @@ public class TaskService {
 
     public TaskDto approve(Long taskId, User user) {
 
-        Task t = tRepo.findById(taskId).orElseThrow(() -> new IllegalArgumentException("La Task non esiste"));
+        Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
+        t.getEvent().isOpen();
 
         if(t.getStatus() != TaskStatus.PENDING_APPROVAL) {
-            throw new IllegalArgumentException("Task non in attesa di approvazione");
+            throw new ConflictException("Task non in attesa di approvazione");
         }
         if(!t.getEvent().isOrganizer(user)) {
-            throw new IllegalArgumentException("Task approvabile solo dall'organizzatore");
+            throw new ForbiddenException("Task approvabile solo dall'organizzatore");
         }
 
         t.setStatus(TaskStatus.FREE);
@@ -98,13 +105,14 @@ public class TaskService {
 
     public TaskDto reject(Long taskId, User user) {
 
-        Task t = tRepo.findById(taskId).orElseThrow(() -> new IllegalArgumentException("La Task non esiste"));
+        Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
+        t.getEvent().isOpen();
 
         if(t.getStatus() != TaskStatus.PENDING_APPROVAL) {
-            throw new IllegalArgumentException("Task non in attesa di approvazione");
+            throw new ConflictException("Task non in attesa di approvazione");
         }
         if(!t.getEvent().isOrganizer(user)) {
-            throw new IllegalArgumentException("Task rifiutabile solo dall'organizzatore");
+            throw new ForbiddenException("Task rifiutabile solo dall'organizzatore");
         }
 
         t.setStatus(TaskStatus.REJECTED);
@@ -114,19 +122,18 @@ public class TaskService {
 
     public TaskDto complete(Long taskId, User user) {
 
-        Task t = tRepo.findById(taskId).orElseThrow(() -> new IllegalArgumentException("La Task non esiste"));
+        Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
+        t.getEvent().isOpen();
         
         if(t.getStatus() != TaskStatus.ASSIGNED) {
-            throw new IllegalArgumentException("Task non assegnata");
+            throw new ConflictException("Task non assegnata");
         }
         if(!t.getAssignedUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Solo l'assegnatario può completare");
+            throw new ForbiddenException("Solo l'assegnatario può completare");
         }
 
         t.setStatus(TaskStatus.COMPLETED);
         tRepo.save(t);
         return dtoMapper.toTaskDto(t);
     }
-
-
 }

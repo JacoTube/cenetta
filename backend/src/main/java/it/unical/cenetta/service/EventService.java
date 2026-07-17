@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import it.unical.cenetta.dto.CreateEventRequest;
 import it.unical.cenetta.dto.EventDetail;
 import it.unical.cenetta.dto.JoinEventRequest;
+import it.unical.cenetta.exception.*;
 import it.unical.cenetta.model.Event;
 import it.unical.cenetta.model.User;
 import it.unical.cenetta.repository.EventRepository;
@@ -46,9 +47,10 @@ public class EventService {
     }
 
     public EventDetail join(JoinEventRequest join, User user) {
-        Event event = eRepo.findByInviteCode(join.inviteCode()).orElseThrow(() -> new IllegalArgumentException("Codice invito non valido"));
+        Event event = eRepo.findByInviteCode(join.inviteCode()).orElseThrow(() -> new NotFoundException("Codice invito non valido"));
+        event.isOpen();
         if(!encoder.matches(join.eventPassword(), event.getPasswordHash())) {
-            throw new IllegalArgumentException("Password errata");
+            throw new ForbiddenException("Password errata");
         }
         event.getParticipants().add(user);
         eRepo.save(event);
