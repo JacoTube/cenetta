@@ -31,7 +31,7 @@ public class TaskService {
         
         Event event = eRepo.findById(eventId).orElseThrow(() -> new NotFoundException("L'evento non esiste"));
 
-        event.isOpen();
+        event.stillOpen();
 
         if(!event.isMember(proposer)) {
             throw new ForbiddenException("L'Utente non appartiene all'evento"); }
@@ -48,7 +48,7 @@ public class TaskService {
 
         Task task = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La task non esiste"));
         Event event = task.getEvent();
-        event.isOpen();
+        event.stillOpen();
 
         if(!event.isMember(user)) {
             throw new ForbiddenException("Utente non membro dell'evento");
@@ -69,7 +69,7 @@ public class TaskService {
 
         Task task = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La task non esiste"));
         Event event = task.getEvent();
-        event.isOpen();
+        event.stillOpen();
 
         if(!event.isMember(user)) {
             throw new ForbiddenException("Utente non membro dell'evento");
@@ -89,7 +89,7 @@ public class TaskService {
     public TaskDto approve(Long taskId, User user) {
 
         Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
-        t.getEvent().isOpen();
+        t.getEvent().stillOpen();
 
         if(t.getStatus() != TaskStatus.PENDING_APPROVAL) {
             throw new ConflictException("Task non in attesa di approvazione");
@@ -106,7 +106,7 @@ public class TaskService {
     public TaskDto reject(Long taskId, User user) {
 
         Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
-        t.getEvent().isOpen();
+        t.getEvent().stillOpen();
 
         if(t.getStatus() != TaskStatus.PENDING_APPROVAL) {
             throw new ConflictException("Task non in attesa di approvazione");
@@ -123,7 +123,7 @@ public class TaskService {
     public TaskDto complete(Long taskId, User user) {
 
         Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
-        t.getEvent().isOpen();
+        t.getEvent().stillOpen();
         
         if(t.getStatus() != TaskStatus.ASSIGNED) {
             throw new ConflictException("Task non assegnata");

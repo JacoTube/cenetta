@@ -1,6 +1,7 @@
 package it.unical.cenetta.service;
 
 import java.security.SecureRandom;
+import java.util.List;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import it.unical.cenetta.dto.CreateEventRequest;
 import it.unical.cenetta.dto.EventDetail;
+import it.unical.cenetta.dto.EventSummary;
 import it.unical.cenetta.dto.JoinEventRequest;
 import it.unical.cenetta.exception.*;
 import it.unical.cenetta.model.Event;
@@ -48,7 +50,7 @@ public class EventService {
 
     public EventDetail join(JoinEventRequest join, User user) {
         Event event = eRepo.findByInviteCode(join.inviteCode()).orElseThrow(() -> new NotFoundException("Codice invito non valido"));
-        event.isOpen();
+        event.stillOpen();
         if(!encoder.matches(join.eventPassword(), event.getPasswordHash())) {
             throw new ForbiddenException("Password errata");
         }
@@ -69,5 +71,10 @@ public class EventService {
         } while (eRepo.existsByInviteCode(code));
 
         return code;
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventSummary> listForUser(User user) {
+        return eRepo.findAllForUser(user).stream().map(e -> dtoMapper.toEventSummary(e, user)).toList();
     }
 }

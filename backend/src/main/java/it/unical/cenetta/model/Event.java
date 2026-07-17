@@ -82,9 +82,18 @@ public class Event {
         return isOrganizer(user) || participants.stream().anyMatch(p -> p.getId().equals(user.getId()));
     }
 
-    public void isOpen() {
-        if (LocalDateTime.now().isAfter(deadline)) {
+    public void stillOpen() {
+        if (isOpen()) {
             throw new EventClosedException("L'evento è scaduto");
         }
     }
+
+    public boolean isOpen() {
+        return LocalDateTime.now().isAfter(deadline);
+    }
+
+    public boolean isClosed() {
+        return LocalDateTime.now().isAfter(deadline);
+    }
+    
 }

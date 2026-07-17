@@ -1,0 +1,11 @@
+<div class="login">
+  <h1>Accedi a Cenetta</h1>
+
+  <input [(ngModel)]="username" placeholder="Username">
+  <input [(ngModel)]="password" type="password" placeholder="Password"
+         (keyup.enter)="submit()">
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <button (click)="submit()">Entra</button>
+</div>

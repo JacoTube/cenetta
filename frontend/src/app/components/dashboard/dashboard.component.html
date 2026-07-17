@@ -1,0 +1,27 @@
+<h1>I miei eventi</h1>
+
+<p *ngIf="events.length === 0">Nessun evento.</p>
+
+<ul>
+  <li *ngFor="let e of events">
+    <strong>{{ e.title }}</strong>
+    — {{ e.eventDateTime | date:'d MMM, HH:mm' }}
+    <span *ngIf="e.organizer">(organizzatore)</span>
+    <span *ngIf="e.closed">[scaduto]</span>
+  </li>
+</ul>
+
+<button (click)="logout()">Esci</button>
+
+<h2>Crea evento</h2>
+<input [(ngModel)]="title" placeholder="Titolo">
+<input [(ngModel)]="description" placeholder="Descrizione">
+<input [(ngModel)]="eventDateTime" type="datetime-local">
+<input [(ngModel)]="deadline" type="datetime-local">
+<input [(ngModel)]="eventPassword" placeholder="Password evento">
+<button (click)="createEvent()">Crea</button>
+
+<h2>Entra con codice</h2>
+<input [(ngModel)]="inviteCode" placeholder="Codice invito">
+<input [(ngModel)]="joinPassword" type="password" placeholder="Password">
+<button (click)="joinEvent()">Entra</button>
