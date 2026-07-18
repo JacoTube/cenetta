@@ -1,0 +1,161 @@
+<div class="page" *ngIf="event as ev">
+
+  <a routerLink="/eventi" class="small">← Torna agli eventi</a>
+
+  <div class="page-head" style="margin-top:.75rem">
+    <div>
+      <h1>{{ ev.title }}</h1>
+      <p class="muted small" style="margin:.2rem 0">
+        {{ ev.eventDateTime | date:'EEEE d MMMM y, HH:mm' }}
+        · organizzato da {{ ev.organizer.displayName }}
+        <span class="badge accent" *ngIf="ev.isOrganizer">sei l'organizzatore</span>
+      </p>
+      <p class="muted small" *ngIf="ev.description">{{ ev.description }}</p>
+    </div>
+  </div>
+
+  <div class="msg" [class.ok]="messageKind === 'ok'"
+                   [class.warn]="messageKind === 'warn'"
+                   [class.error]="messageKind === 'error'"
+       *ngIf="message"
+       (click)="chiudiMessaggio()" style="cursor:pointer">
+    {{ message }}
+  </div>
+
+  <!-- Vincolo temporale passivo -->
+  <div class="banner frozen" *ngIf="ev.closed">
+    🔒 La scadenza ({{ ev.deadline | date:'d MMM y, HH:mm' }}) è trascorsa.
+    L'evento è <strong>congelato</strong>: la checklist è in sola lettura e le task
+    non completate restano tali in modo permanente.
+  </div>
+  <div class="banner deadline" *ngIf="!ev.closed">
+    ⏳ Modifiche possibili fino al <strong>{{ ev.deadline | date:'d MMM y, HH:mm' }}</strong>.
+  </div>
+
+  <section class="card invite" *ngIf="ev.isOrganizer">
+    <h2>Invita i tuoi amici</h2>
+    <p style="margin:.2rem 0">Codice di invito: <span class="code">{{ ev.inviteCode }}</span></p>
+    <p class="muted small">
+      Condividi il codice insieme alla password che hai scelto: servono entrambi per accedere.
+    </p>
+  </section>
+
+  <section class="card tight">
+    <h2>Avanzamento</h2>
+    <div class="progress"><span [style.width.%]="progress"></span></div>
+    <p class="muted small" style="margin:0">
+      {{ completed.length }} completate · {{ assigned.length }} in carico ·
+      {{ free.length }} libere · {{ ev.participants.length + 1 }} partecipanti
+    </p>
+  </section>
+
+  <section class="card" *ngIf="!ev.closed">
+    <h2>{{ ev.isOrganizer ? 'Aggiungi una task' : 'Proponi una necessità' }}</h2>
+    <div class="row">
+      <label>Cosa serve?
+        <input type="text" [(ngModel)]="newTitle" name="newTitle"
+               placeholder="Portare le uova" (keyup.enter)="addTask()">
+      </label>
+      <label>Nota <span class="muted">(facoltativa)</span>
+        <input type="text" [(ngModel)]="newNote" name="newNote" placeholder="Almeno 6, fresche">
+      </label>
+    </div>
+    <p class="muted small" *ngIf="!ev.organizer" style="margin:.2rem 0 .7rem">
+      La tua proposta resterà in attesa finché l'organizzatore non l'approva.
+    </p>
+    <button class="primary" (click)="addTask()">
+      {{ ev.isOrganizer ? 'Aggiungi' : 'Proponi' }}
+    </button>
+  </section>
+
+  <section class="card" *ngIf="pending.length">
+    <h2>In attesa di approvazione <span class="badge pending">{{ pending.length }}</span></h2>
+    <ul class="plain">
+      <li class="task" *ngFor="let t of pending">
+        <div class="body">
+          <span class="title">{{ t.title }}</span>
+          <span class="muted small" *ngIf="t.note"> — {{ t.note }}</span>
+          <p class="meta">proposta da {{ t.proposedBy?.displayName }}</p>
+        </div>
+        <div class="actions" *ngIf="ev.isOrganizer && !ev.closed">
+          <button class="primary" [disabled]="isBusy(t)" (click)="approve(t)">Approva</button>
+          <button class="danger"  [disabled]="isBusy(t)" (click)="reject(t)">Rifiuta</button>
+        </div>
+        <span class="badge pending" *ngIf="!ev.isOrganizer">in attesa</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Task libere <span class="badge free" *ngIf="free.length">{{ free.length }}</span></h2>
+    <p class="empty" *ngIf="!free.length">Nessuna task libera al momento.</p>
+    <ul class="plain">
+      <li class="task" *ngFor="let t of free">
+        <div class="body">
+          <span class="title">{{ t.title }}</span>
+          <span class="muted small" *ngIf="t.note"> — {{ t.note }}</span>
+        </div>
+        <div class="actions" *ngIf="!ev.closed">
+          <button class="primary" [disabled]="isBusy(t)" (click)="claim(t)">
+            {{ isBusy(t) ? '...' : 'Me ne occupo io' }}
+          </button>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card" *ngIf="assigned.length">
+    <h2>Prese in carico <span class="badge assigned">{{ assigned.length }}</span></h2>
+    <ul class="plain">
+      <li class="task" *ngFor="let t of assigned">
+        <div class="body">
+          <span class="title">{{ t.title }}</span>
+          <span class="muted small" *ngIf="t.note"> — {{ t.note }}</span>
+          <p class="meta">
+            {{ isMine(t) ? 'te ne stai occupando tu' : 'assegnata a ' + t.assignee?.displayName }}
+          </p>
+        </div>
+        <div class="actions" *ngIf="isMine(t) && !ev.closed">
+          <button class="primary" [disabled]="isBusy(t)" (click)="complete(t)">Fatto ✓</button>
+          <button class="ghost"   [disabled]="isBusy(t)" (click)="release(t)">Rilascia</button>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card" *ngIf="completed.length">
+    <h2>Completate <span class="badge completed">{{ completed.length }}</span></h2>
+    <ul class="plain">
+      <li class="task done" *ngFor="let t of completed">
+        <div class="body">
+          <span class="title">{{ t.title }}</span>
+          <p class="meta">completata da {{ t.assignee?.displayName }}</p>
+        </div>
+        <span class="badge completed">✓</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card" *ngIf="rejected.length">
+    <h2>Proposte rifiutate</h2>
+    <ul class="plain">
+      <li class="task rejected" *ngFor="let t of rejected">
+        <div class="body">
+          <span class="title">{{ t.title }}</span>
+          <p class="meta">proposta da {{ t.proposedBy?.displayName }}</p>
+        </div>
+        <span class="badge rejected">rifiutata</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card tight">
+    <h2>Partecipanti</h2>
+    <p class="small" style="margin:0">
+      <strong>{{ ev.organizer.displayName }}</strong>
+      <span class="badge accent">organizzatore</span>
+      <span *ngFor="let p of ev.participants"> · {{ p.displayName }}</span>
+    </p>
+  </section>
+
+</div>
