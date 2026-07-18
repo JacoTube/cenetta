@@ -15,6 +15,7 @@ import it.unical.cenetta.exception.*;
 import it.unical.cenetta.model.Event;
 import it.unical.cenetta.model.User;
 import it.unical.cenetta.repository.EventRepository;
+import it.unical.cenetta.repository.TaskRepository;
 
 @Service
 @Transactional
@@ -24,11 +25,13 @@ public class EventService {
     private final SecureRandom random = new SecureRandom();
 
     private final EventRepository eRepo;
+    private final TaskRepository tRepo;
     private final PasswordEncoder encoder;
     private final DtoMapper dtoMapper;
 
-    public EventService(EventRepository eRepo, PasswordEncoder encoder, DtoMapper dtoMapper) {
+    public EventService(EventRepository eRepo, TaskRepository tRepo, PasswordEncoder encoder, DtoMapper dtoMapper) {
         this.eRepo = eRepo;
+        this.tRepo = tRepo;
         this.encoder = encoder;
         this.dtoMapper = dtoMapper;
     }
@@ -45,7 +48,7 @@ public class EventService {
 
         Event event = new Event(request.title(), request.description(), request.eventDateTime(), request.deadline(), organizer, code, passwordHash);
         eRepo.save(event);
-        return dtoMapper.toEventDetail(event);
+        return dtoMapper.toEventDetail(event, organizer, List.of());
     }
 
     public EventDetail join(JoinEventRequest join, User user) {
@@ -56,7 +59,7 @@ public class EventService {
         }
         event.getParticipants().add(user);
         eRepo.save(event);
-        return dtoMapper.toEventDetail(event);
+        return dtoMapper.toEventDetail(event, user, tRepo.findByEventId(event.getId()));
     }
 
     private String generateUniqueCode() {
@@ -76,5 +79,14 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<EventSummary> listForUser(User user) {
         return eRepo.findAllForUser(user).stream().map(e -> dtoMapper.toEventSummary(e, user)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public EventDetail detail(Long eventId, User user) {
+        Event event = eRepo.findById(eventId).orElseThrow(() -> new NotFoundException("Evento non trovato"));
+        
+        if (!event.isMember(user)) throw new ForbiddenException("Non fai parte di questo evento");
+
+        return dtoMapper.toEventDetail(event, user, tRepo.findByEventId(eventId));
     }
 }

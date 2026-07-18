@@ -38,6 +38,7 @@ class OptimisticLockingTest {
     @Autowired private UserRepository userRepository;
     @Autowired private EventRepository eventRepository;
     @Autowired private PasswordEncoder encoder;
+    private Long taskVersion;
 
     private User luigi;
     private User peach;
@@ -64,6 +65,7 @@ class OptimisticLockingTest {
         TaskDto task = taskService.create(
                 new CreateTaskRequest("Portare le uova", null), event.getId(), mario);
         taskId = task.id();
+        taskVersion = task.version();
         assertEquals(TaskStatus.FREE, task.status());
     }
 
@@ -83,7 +85,8 @@ class OptimisticLockingTest {
             User utente = Thread.currentThread().getName().endsWith("1") ? luigi : peach;
             start.await();                    // aspetta l'apertura del cancello
             try {
-                taskService.claim(taskId, utente);
+                
+                taskService.claim(taskId, taskVersion, utente);
                 successi.incrementAndGet();    // ha fatto commit
             } catch (Exception ex) {
                 conflitti.incrementAndGet();   // fallito in modo sicuro

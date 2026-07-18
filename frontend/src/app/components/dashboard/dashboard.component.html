@@ -1,27 +1,95 @@
-<h1>I miei eventi</h1>
+<div class="page">
 
-<p *ngIf="events.length === 0">Nessun evento.</p>
+  <div class="page-head">
+    <div>
+      <h1>I miei eventi</h1>
+      <p class="muted small" style="margin:0">
+        Ciao {{ currentUser?.displayName }} — ecco cosa hai in programma.
+      </p>
+    </div>
+    <div class="actions">
+      <button class="primary" (click)="showCreate = !showCreate">Nuovo evento</button>
+      <button class="ghost" (click)="showJoin = !showJoin">Ho un codice</button>
+      <button class="ghost" (click)="logout()">Esci</button>
+    </div>
+  </div>
 
-<ul>
-  <li *ngFor="let e of events">
-    <strong>{{ e.title }}</strong>
-    — {{ e.eventDateTime | date:'d MMM, HH:mm' }}
-    <span *ngIf="e.organizer">(organizzatore)</span>
-    <span *ngIf="e.closed">[scaduto]</span>
-  </li>
-</ul>
+  <div class="msg error" *ngIf="error">{{ error }}</div>
 
-<button (click)="logout()">Esci</button>
+  <section class="card" *ngIf="showCreate">
+    <h2>Crea un evento</h2>
+    <div class="row">
+      <label>Titolo
+        <input type="text" [(ngModel)]="title" name="title" placeholder="Carbonara e Risiko">
+      </label>
+      <label>Descrizione
+        <input type="text" [(ngModel)]="description" name="description" placeholder="Cena e partita">
+      </label>
+    </div>
+    <div class="row">
+      <label>Data e ora dell'evento
+        <input type="datetime-local" [(ngModel)]="eventDateTime" name="eventDateTime">
+      </label>
+      <label>Scadenza <span class="muted">(deve precedere l'evento)</span>
+        <input type="datetime-local" [(ngModel)]="deadline" name="deadline">
+      </label>
+    </div>
+    <label>Password dell'evento
+      <input type="text" [(ngModel)]="eventPassword" name="eventPassword"
+             placeholder="La condividerai con gli invitati">
+    </label>
+    <p class="muted small">
+      Dopo la scadenza l'evento viene congelato: nessuna task potrà più essere
+      aggiunta, presa in carico o completata.
+    </p>
+    <button class="primary" (click)="createEvent()">Crea evento</button>
+  </section>
 
-<h2>Crea evento</h2>
-<input [(ngModel)]="title" placeholder="Titolo">
-<input [(ngModel)]="description" placeholder="Descrizione">
-<input [(ngModel)]="eventDateTime" type="datetime-local">
-<input [(ngModel)]="deadline" type="datetime-local">
-<input [(ngModel)]="eventPassword" placeholder="Password evento">
-<button (click)="createEvent()">Crea</button>
+  <section class="card" *ngIf="showJoin">
+    <h2>Partecipa a un evento</h2>
+    <div class="row">
+      <label>Codice di invito
+        <input type="text" [(ngModel)]="inviteCode" name="inviteCode" placeholder="CARBO123">
+      </label>
+      <label>Password dell'evento
+        <input type="password" [(ngModel)]="joinPassword" name="joinPassword">
+      </label>
+    </div>
+    <button class="primary" (click)="joinEvent()">Entra nell'evento</button>
+  </section>
 
-<h2>Entra con codice</h2>
-<input [(ngModel)]="inviteCode" placeholder="Codice invito">
-<input [(ngModel)]="joinPassword" type="password" placeholder="Password">
-<button (click)="joinEvent()">Entra</button>
+  <p class="empty" *ngIf="!events.length">
+    Non partecipi ancora a nessun evento. Creane uno o usa un codice di invito.
+  </p>
+
+  <h2 *ngIf="upcoming.length" style="margin-top:1.5rem">In programma</h2>
+  <ul class="plain">
+    <li class="event-card" *ngFor="let e of upcoming" [routerLink]="['/eventi', e.id]">
+      <div>
+        <h3>{{ e.title }}
+          <span class="badge accent" *ngIf="e.organizer">organizzatore</span>
+        </h3>
+        <p class="meta">
+          {{ e.eventDateTime | date:'EEEE d MMMM, HH:mm' }} · da {{ e.organizerName }}
+        </p>
+        <p class="meta">
+          scade il {{ e.deadline | date:'d MMM, HH:mm' }} ·
+          {{ e.participantCount }} invitati
+        </p>
+      </div>
+      <span class="chev">›</span>
+    </li>
+  </ul>
+
+  <h2 *ngIf="past.length" style="margin-top:1.5rem">Scaduti <span class="muted small">(sola lettura)</span></h2>
+  <ul class="plain">
+    <li class="event-card closed" *ngFor="let e of past" [routerLink]="['/eventi', e.id]">
+      <div>
+        <h3>{{ e.title }} <span class="badge">congelato</span></h3>
+        <p class="meta">scadenza superata il {{ e.deadline | date:'d MMM, HH:mm' }}</p>
+      </div>
+      <span class="chev">›</span>
+    </li>
+  </ul>
+
+</div>

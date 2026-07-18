@@ -2,17 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { EventService } from '../../core/event.service';
-import { EventSummary } from '../../models/models';
+import { EventSummary, UserDto } from '../../models/models';
 
 @Component({
   selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
 
   events: EventSummary[] = [];
   error: string | null = null;
+
+  showCreate = false;
+  showJoin = false;
 
   title = '';
   description = '';
@@ -32,10 +34,22 @@ export class DashboardComponent implements OnInit {
     this.reload();
   }
 
+  get currentUser(): UserDto | null {
+    return this.auth.currentUser;
+  }
+
+  get upcoming(): EventSummary[] {
+    return this.events.filter(e => !e.closed);
+  }
+
+  get past(): EventSummary[] {
+    return this.events.filter(e => e.closed);
+  }
+
   reload(): void {
     this.eventService.getMyEvents().subscribe({
       next: list => this.events = list,
-      error: () => this.error = 'Impossibile caricare gli eventi'
+      error: () => this.error = 'Impossibile caricare gli eventi.'
     });
   }
 
@@ -48,36 +62,21 @@ export class DashboardComponent implements OnInit {
       deadline: this.deadline,
       eventPassword: this.eventPassword
     }).subscribe({
-      next: () => {
-        this.resetCreateForm();
-        this.reload();
-      },
-      error: err => this.error = err.error?.message ?? 'Creazione non riuscita'
+      next: creato => this.router.navigate(['/eventi', creato.id]),
+      error: err => this.error = err.error?.message ?? 'Creazione non riuscita.'
     });
   }
 
   joinEvent(): void {
     this.error = null;
     this.eventService.joinEvent(this.inviteCode, this.joinPassword).subscribe({
-      next: () => {
-        this.inviteCode = '';
-        this.joinPassword = '';
-        this.reload();
-      },
-      error: err => this.error = err.error?.message ?? 'Accesso non riuscito'
+      next: evento => this.router.navigate(['/eventi', evento.id]),
+      error: err => this.error = err.error?.message ?? 'Accesso all\'evento non riuscito.'
     });
   }
 
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
-  }
-
-  private resetCreateForm(): void {
-    this.title = '';
-    this.description = '';
-    this.eventDateTime = '';
-    this.deadline = '';
-    this.eventPassword = '';
   }
 }

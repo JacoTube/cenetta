@@ -9,14 +9,16 @@ import { HttpClientModule } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './core/auth.interceptor';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
-
-
+import { EventDetailComponent } from './components/event-detail/event-detail.component';
+import { RegisterComponent } from './components/register/register.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    DashboardComponent
+    DashboardComponent,
+    EventDetailComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,

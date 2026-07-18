@@ -10,17 +10,6 @@ export interface Task {
   assignee: UserDto | null;
   proposedBy: UserDto | null;
 }
-
-export interface EventDetail {
-  id: number;
-  title: string;
-  description: string | null;
-  eventDateTime: string;
-  deadline: string;
-  inviteCode: string;
-  organizer: UserDto;
-}
-
 export interface AuthResponse { 
     token: string; 
     user: UserDto; 
@@ -35,4 +24,28 @@ export interface EventSummary {
   organizer: boolean;
   organizerName: string;
   participantCount: number;
+}
+
+export interface EventDetail {
+  id: number;
+  title: string;
+  description: string | null;
+  eventDateTime: string;
+  deadline: string;
+  closed: boolean;
+  isOrganizer: boolean;
+  inviteCode: string;
+  organizer: UserDto;
+  participants: UserDto[];
+  tasks: Task[];
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  note: string | null;
+  status: TaskStatus;
+  version: number;
+  assignee: UserDto | null;
+  proposedBy: UserDto | null;
 }

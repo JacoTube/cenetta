@@ -1,0 +1,27 @@
+<section class="card narrow">
+  <h1>Crea il tuo account</h1>
+  <p class="muted small">Ti serve per organizzare eventi o partecipare a quelli dei tuoi amici.</p>
+
+  <label>Nome visualizzato
+    <input type="text" [(ngModel)]="displayName" name="displayName" placeholder="Mario Rossi">
+  </label>
+
+  <label>Username
+    <input type="text" [(ngModel)]="username" name="username" autocomplete="username">
+  </label>
+
+  <label>Password <span class="muted">(minimo 6 caratteri)</span>
+    <input type="password" [(ngModel)]="password" name="password"
+           autocomplete="new-password" (keyup.enter)="submit()">
+  </label>
+
+  <p class="msg error" *ngIf="error">{{ error }}</p>
+
+  <button class="primary" (click)="submit()" [disabled]="loading">
+    {{ loading ? 'Creazione...' : 'Registrati' }}
+  </button>
+
+  <p class="muted small" style="margin-top:1rem">
+    Hai gia' un account? <a routerLink="/login">Accedi</a>
+  </p>
+</section>

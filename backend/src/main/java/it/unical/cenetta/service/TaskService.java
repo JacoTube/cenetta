@@ -30,7 +30,7 @@ public class TaskService {
     public TaskDto create(CreateTaskRequest tRequest, Long eventId, User proposer) {
         
         Event event = eRepo.findById(eventId).orElseThrow(() -> new NotFoundException("L'evento non esiste"));
-
+        
         event.stillOpen();
 
         if(!event.isMember(proposer)) {
@@ -44,11 +44,15 @@ public class TaskService {
         return dtoMapper.toTaskDto(t);
     }
 
-    public TaskDto claim(Long taskId, User user) {
+    public TaskDto claim(Long taskId, Long expectedVersion, User user) {
 
         Task task = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La task non esiste"));
         Event event = task.getEvent();
         event.stillOpen();
+
+        if (expectedVersion != null && !expectedVersion.equals(task.getVersion())) {
+            throw new ConflictException("La task è stata modificata da un altro partecipante: ricarica");
+        }
 
         if(!event.isMember(user)) {
             throw new ForbiddenException("Utente non membro dell'evento");
@@ -65,11 +69,15 @@ public class TaskService {
         return dtoMapper.toTaskDto(task);
     }
 
-    public TaskDto release(Long taskId, User user) {
+    public TaskDto release(Long taskId, Long expectedVersion, User user) {
 
         Task task = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La task non esiste"));
         Event event = task.getEvent();
         event.stillOpen();
+
+        if (expectedVersion != null && !expectedVersion.equals(task.getVersion())) {
+            throw new ConflictException("La task è stata modificata da un altro partecipante: ricarica");
+        }
 
         if(!event.isMember(user)) {
             throw new ForbiddenException("Utente non membro dell'evento");
@@ -86,10 +94,14 @@ public class TaskService {
         return dtoMapper.toTaskDto(task);
     }
 
-    public TaskDto approve(Long taskId, User user) {
+    public TaskDto approve(Long taskId, Long expectedVersion, User user) {
 
         Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
         t.getEvent().stillOpen();
+
+        if (expectedVersion != null && !expectedVersion.equals(t.getVersion())) {
+            throw new ConflictException("La task è stata modificata da un altro partecipante: ricarica");
+        }
 
         if(t.getStatus() != TaskStatus.PENDING_APPROVAL) {
             throw new ConflictException("Task non in attesa di approvazione");
@@ -103,10 +115,14 @@ public class TaskService {
         return dtoMapper.toTaskDto(t);
     }
 
-    public TaskDto reject(Long taskId, User user) {
+    public TaskDto reject(Long taskId, Long expectedVersion, User user) {
 
         Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
         t.getEvent().stillOpen();
+
+        if (expectedVersion != null && !expectedVersion.equals(t.getVersion())) {
+            throw new ConflictException("La task è stata modificata da un altro partecipante: ricarica");
+        }
 
         if(t.getStatus() != TaskStatus.PENDING_APPROVAL) {
             throw new ConflictException("Task non in attesa di approvazione");
@@ -120,10 +136,14 @@ public class TaskService {
         return dtoMapper.toTaskDto(t);
     }
 
-    public TaskDto complete(Long taskId, User user) {
+    public TaskDto complete(Long taskId, Long expectedVersion, User user) {
 
         Task t = tRepo.findById(taskId).orElseThrow(() -> new NotFoundException("La Task non esiste"));
         t.getEvent().stillOpen();
+
+        if (expectedVersion != null && !expectedVersion.equals(t.getVersion())) {
+            throw new ConflictException("La task è stata modificata da un altro partecipante: ricarica");
+        }
         
         if(t.getStatus() != TaskStatus.ASSIGNED) {
             throw new ConflictException("Task non assegnata");

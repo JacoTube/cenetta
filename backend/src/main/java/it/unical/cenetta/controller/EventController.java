@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +39,11 @@ public class EventController {
     @PostMapping("/join")
     public EventDetail joinEvent(@RequestBody JoinEventRequest request, @AuthenticationPrincipal User user) {
         return eService.join(request, user);
+    }
+
+    @GetMapping("/{id}")
+    public EventDetail detail(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        return eService.detail(id, user);
     }
 }
 

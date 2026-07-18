@@ -1,11 +1,21 @@
-<div class="login">
+<section class="card narrow">
   <h1>Accedi a Cenetta</h1>
+  <p class="muted small">Organizza cene condivise senza dimenticare il guanciale.</p>
 
-  <input [(ngModel)]="username" placeholder="Username">
-  <input [(ngModel)]="password" type="password" placeholder="Password"
-         (keyup.enter)="submit()">
+  <label>Username
+    <input type="text" [(ngModel)]="username" name="username" autocomplete="username">
+  </label>
 
-  <p class="error" *ngIf="error">{{ error }}</p>
+  <label>Password
+    <input type="password" [(ngModel)]="password" name="password"
+           autocomplete="current-password" (keyup.enter)="submit()">
+  </label>
 
-  <button (click)="submit()">Entra</button>
-</div>
+  <p class="msg error" *ngIf="error">{{ error }}</p>
+
+  <button class="primary" (click)="submit()">Entra</button>
+
+  <p class="muted small" style="margin-top:1rem">
+    Non hai un account? <a routerLink="/registrazione">Registrati</a>
+  </p>
+</section>
