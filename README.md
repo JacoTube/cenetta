@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🍝 Cenetta — Organizza la cena, non il caos</h1>
+  <h1>🍝 Cenetta</h1>
   <p>
     <strong>Piattaforma Full-Stack collaborativa per l'organizzazione di eventi conviviali</strong>
   </p>
